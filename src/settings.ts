@@ -1,5 +1,5 @@
 import FileTreeAlternativePlugin, { eventTypes } from './main';
-import { PluginSettingTab, Setting, App, Notice } from 'obsidian';
+import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import { LocalStorageHandler } from '@ozntel/local-storage-handler';
 
 type FolderIcon = 'default' | 'box-folder' | 'icomoon' | 'typicon' | 'circle-gg';
@@ -18,7 +18,7 @@ export interface FileTreeAlternativePluginSettings {
     folderCountOption: string;
     evernoteView: boolean;
     filePreviewOnHover: boolean;
-    sortFilesBy: 'name' | 'last-update';
+    sortFilesBy: 'name' | 'last-update' | 'metadata';
     fixedHeaderInFileList: boolean;
 }
 
@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS: FileTreeAlternativePluginSettings = {
     folderCountOption: 'notes',
     evernoteView: true,
     filePreviewOnHover: false,
-    sortFilesBy: 'name',
+    sortFilesBy: 'metadata',
     fixedHeaderInFileList: false,
 };
 
@@ -83,7 +83,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.evernoteView = value;
                     this.plugin.saveSettings();
                     this.refreshView();
-                })
+                }),
             );
 
         new Setting(containerEl)
@@ -94,7 +94,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.ribbonIcon = value;
                     this.plugin.saveSettings();
                     this.plugin.refreshIconRibbon();
-                })
+                }),
             );
 
         /* ------------- Folder Pane Settings ------------- */
@@ -127,7 +127,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.showRootFolder = value;
                     this.plugin.saveSettings();
                     this.refreshView();
-                })
+                }),
             );
 
         new Setting(containerEl)
@@ -138,7 +138,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.folderCount = value;
                     this.plugin.saveSettings();
                     this.plugin.refreshTreeLeafs();
-                })
+                }),
             );
 
         new Setting(containerEl)
@@ -166,7 +166,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.showFilesFromSubFolders = value;
                     this.plugin.saveSettings();
                     this.refreshView();
-                })
+                }),
             );
 
         new Setting(containerEl)
@@ -177,7 +177,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.showFilesFromSubFoldersButton = value;
                     this.plugin.saveSettings();
                     this.refreshView();
-                })
+                }),
             );
 
         new Setting(containerEl)
@@ -188,19 +188,19 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.searchFunction = value;
                     this.plugin.saveSettings();
                     this.refreshView();
-                })
+                }),
             );
 
         new Setting(containerEl)
             .setName('All & Tag Search only in Focused Folder')
             .setDesc(
-                `"all:" and "tag:" searches by default looks for all files in your vault. Turn on this option if you want search only in Focused Folder`
+                `"all:" and "tag:" searches by default looks for all files in your vault. Turn on this option if you want search only in Focused Folder`,
             )
             .addToggle((toggle) =>
                 toggle.setValue(this.plugin.settings.allSearchOnlyInFocusedFolder).onChange((value) => {
                     this.plugin.settings.allSearchOnlyInFocusedFolder = value;
                     this.plugin.saveSettings();
-                })
+                }),
             );
 
         new Setting(containerEl)
@@ -209,8 +209,9 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
             .addDropdown((cb) => {
                 cb.addOption('name', 'Name');
                 cb.addOption('last-update', 'Last Update');
+                cb.addOption('metadata', 'Metadata');
                 cb.setValue(this.plugin.settings.sortFilesBy);
-                cb.onChange((option: 'name' | 'last-update') => {
+                cb.onChange((option: 'name' | 'last-update' | 'metadata') => {
                     this.plugin.settings.sortFilesBy = option;
                     this.plugin.saveSettings();
                     this.refreshView();
@@ -224,7 +225,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                 toggle.setValue(this.plugin.settings.filePreviewOnHover).onChange((value) => {
                     this.plugin.settings.filePreviewOnHover = value;
                     this.plugin.saveSettings();
-                })
+                }),
             );
 
         new Setting(containerEl)
@@ -235,7 +236,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.plugin.settings.fixedHeaderInFileList = value;
                     this.plugin.saveSettings();
                     this.refreshView();
-                })
+                }),
             );
 
         /* ------------- Exclusion Settings ------------- */
@@ -246,31 +247,31 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
             .setName('Excluded File Extensions')
             .setDesc(
                 `Provide extension of files, which you want to exclude from listing in file tree, divided by comma. i.e. 'png, pdf, jpeg'.
-            You need to reload the vault or use "Reload File Tree" button below to make changes effective.`
+            You need to reload the vault or use "Reload File Tree" button below to make changes effective.`,
             )
             .addTextArea((text) =>
                 text.setValue(this.plugin.settings.excludedExtensions).onChange((value) => {
                     this.plugin.settings.excludedExtensions = value;
                     this.plugin.saveSettings();
-                })
+                }),
             );
 
         new Setting(containerEl)
             .setName('Excluded Folder Paths')
             .setDesc(
                 `Provide full path of folders, which you want to exclude from listing in file tree, divided by comma. i.e. 'Personal/Attachments, Work/Documents/Folders'.
-            All subfolders are going to be excluded, as well. You need to reload the vault or use "Reload File Tree" button below to make changes effective.`
+            All subfolders are going to be excluded, as well. You need to reload the vault or use "Reload File Tree" button below to make changes effective.`,
             )
             .addTextArea((text) =>
                 text.setValue(this.plugin.settings.excludedFolders).onChange((value) => {
                     this.plugin.settings.excludedFolders = value;
                     this.plugin.saveSettings();
-                })
+                }),
             );
 
         new Setting(containerEl)
             .setDesc(
-                'Use this button to reload the file tree. Reloading the file tree is required for some of the settings. You can also restart your vault to have same effect.'
+                'Use this button to reload the file tree. Reloading the file tree is required for some of the settings. You can also restart your vault to have same effect.',
             )
             .addButton((button) => {
                 button
@@ -289,7 +290,7 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
             .setName('Clear All Cache Data')
             .setDesc(
                 `This button will clear the following cache data: "Last position of the divider" & "List of expanded folders in the folder pane", 
-                & "Last active folder path". It will not touch your settings above and list of pinned files. It is recommended to do this clearing once in a while.`
+                & "Last active folder path". It will not touch your settings above and list of pinned files. It is recommended to do this clearing once in a while.`,
             )
             .addButton((button) => {
                 let b = button

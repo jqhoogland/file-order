@@ -7,6 +7,7 @@ import FileTreeAlternativePlugin from 'main';
 import * as Util from 'utils/Utils';
 import * as recoilState from 'recoil/pluginState';
 import { useRecoilState } from 'recoil';
+import { sortByMetadata } from 'utils/Utils';
 
 interface FilesProps {
     plugin: FileTreeAlternativePlugin;
@@ -150,6 +151,9 @@ export function FileComponent(props: FilesProps) {
                 return a.name.localeCompare(b.name, 'en', { numeric: true });
             } else if (plugin.settings.sortFilesBy === 'last-update') {
                 return b.stat.mtime - a.stat.mtime;
+            } else if (plugin.settings.sortFilesBy === 'metadata') {
+                console.log(a,b)
+                return sortByMetadata(a, b);
             }
         });
         if (pinnedFiles.length > 0) {

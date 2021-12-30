@@ -1,12 +1,34 @@
-import { TFile, TFolder, App, Keymap } from 'obsidian';
+import { App, Keymap, TFile, TFolder } from 'obsidian';
 import FileTreeAlternativePlugin from 'main';
 import { FolderFileCountMap, FolderTree } from 'utils/types';
+
+
+const _parseMetadata = (plugin) => (path) => {
+    const file = plugin.app.plugins.plugins.dataview?.api.page(path);
+    return {
+        tags: file?.tags ?? [],
+        lcc: file?.lcc ?? '',
+    };
+};
+
+const parseMetadata = (plugin) => ({ path, ...file }) => ({
+    metadata: _parseMetadata(plugin)(path),
+    path, ...file,
+});
+
+export const sortByMetadata = (a, b) => {
+    const _a = a.metadata.lcc === '' ? a.name : a.metadata.lcc;
+    const _b = b.metadata.lcc === '' ? b.name : b.metadata.lcc;
+
+    return (_a).localeCompare(_b);
+};
 
 // Helper Function To Get List of Files
 export const getFilesUnderPath = (path: string, plugin: FileTreeAlternativePlugin, getAllFiles?: boolean): TFile[] => {
     var filesUnderPath: TFile[] = [];
     var showFilesFromSubFolders = getAllFiles ? true : plugin.settings.showFilesFromSubFolders;
     recursiveFx(path, plugin.app);
+
     function recursiveFx(path: string, app: App) {
         var folderObj = app.vault.getAbstractFileByPath(path);
         if (folderObj instanceof TFolder && folderObj.children) {
@@ -16,12 +38,15 @@ export const getFilesUnderPath = (path: string, plugin: FileTreeAlternativePlugi
             }
         }
     }
-    return filesUnderPath;
+
+    //console.log(filesUnderPath.map(parseMetadata(plugin)).sort(sortByMetadata));
+    return filesUnderPath.map(parseMetadata(plugin)).sort(sortByMetadata);
 };
 
 // Helper Function to Create Folder Tree
 export const createFolderTree = (startFolder: TFolder): FolderTree => {
     let fileTree: { folder: TFolder; children: any } = { folder: startFolder, children: [] };
+
     function recursive(folder: TFolder, object: { folder: TFolder; children: any }) {
         if (!(folder && folder.children)) return;
         for (let child of folder.children) {
@@ -33,6 +58,7 @@ export const createFolderTree = (startFolder: TFolder): FolderTree => {
             }
         }
     }
+
     recursive(startFolder, fileTree);
     return fileTree;
 };
