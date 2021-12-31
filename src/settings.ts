@@ -5,6 +5,7 @@ import { LocalStorageHandler } from '@ozntel/local-storage-handler';
 type FolderIcon = 'default' | 'box-folder' | 'icomoon' | 'typicon' | 'circle-gg';
 
 export interface FileTreeAlternativePluginSettings {
+    tagOrder: void;
     ribbonIcon: boolean;
     showRootFolder: boolean;
     showFilesFromSubFolders: boolean;
@@ -20,9 +21,11 @@ export interface FileTreeAlternativePluginSettings {
     filePreviewOnHover: boolean;
     sortFilesBy: 'name' | 'last-update' | 'metadata';
     fixedHeaderInFileList: boolean;
+    tagFile: string;
 }
 
 export const DEFAULT_SETTINGS: FileTreeAlternativePluginSettings = {
+    tagOrder: [],
     ribbonIcon: true,
     showRootFolder: true,
     showFilesFromSubFolders: true,
@@ -38,6 +41,7 @@ export const DEFAULT_SETTINGS: FileTreeAlternativePluginSettings = {
     filePreviewOnHover: false,
     sortFilesBy: 'metadata',
     fixedHeaderInFileList: false,
+    tagFile: 'js/tag-order.yml',
 };
 
 export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
@@ -217,6 +221,19 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
                     this.refreshView();
                 });
             });
+
+        new Setting(containerEl)
+            .setName('Tag ordering')
+            .setDesc('Path to file containing tag order')
+            .addText(text => text
+                .setPlaceholder('js/tag-order.json')
+                .setValue(this.plugin.settings.tagFile)
+                .onChange(async (value) => {
+                    this.plugin.settings.tagFile = value;
+                    await this.plugin.saveSettings();
+                    await this.plugin.loadTagOrder();
+                }),
+            );
 
         new Setting(containerEl)
             .setName('Preview File on Hover')

@@ -152,8 +152,7 @@ export function FileComponent(props: FilesProps) {
             } else if (plugin.settings.sortFilesBy === 'last-update') {
                 return b.stat.mtime - a.stat.mtime;
             } else if (plugin.settings.sortFilesBy === 'metadata') {
-                console.log(a,b)
-                return sortByMetadata(a, b);
+                return sortByMetadata(plugin.settings)(a, b);
             }
         });
         if (pinnedFiles.length > 0) {
@@ -165,7 +164,7 @@ export function FileComponent(props: FilesProps) {
         return sortedfileList;
     };
 
-    const filesToList: TFile[] = useMemo(() => customFiles(fileList), [excludedFolders, excludedExtensions, pinnedFiles, fileList]);
+    const filesToList: TFile[] = useMemo(() => customFiles(fileList), [excludedFolders, excludedExtensions, pinnedFiles, fileList, plugin.settings.tagOrder]);
 
     // Handle Plus Button - Opens Modal to Create a New File
     const createNewFile = async (e: React.MouseEvent, folderPath: string) => {

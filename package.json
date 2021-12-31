@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "@ozntel/local-storage-handler": "^1.0.3",
+        "js-yaml": "^4.1.0",
         "preact": "^10",
         "react": "npm:@preact/compat",
         "react-dom": "npm:@preact/compat",

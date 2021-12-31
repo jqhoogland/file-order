@@ -6,7 +6,7 @@ import { FolderFileCountMap, FolderTree } from 'utils/types';
 const _parseMetadata = (plugin) => (path) => {
     const file = plugin.app.plugins.plugins.dataview?.api.page(path);
     return {
-        tags: file?.tags ?? [],
+        tags: file?.tags?.values ?? [],
         lcc: file?.lcc ?? '',
     };
 };
@@ -16,9 +16,22 @@ const parseMetadata = (plugin) => ({ path, ...file }) => ({
     path, ...file,
 });
 
-export const sortByMetadata = (a, b) => {
-    const _a = a.metadata.lcc === '' ? a.name : a.metadata.lcc;
-    const _b = b.metadata.lcc === '' ? b.name : b.metadata.lcc;
+export const sortByMetadata = settings => (a, b) => {
+    const atag = (settings?.tagOrder ?? []).indexOf(a.metadata.tags?.[0] ?? '');
+    const btag = (settings?.tagOrder ?? []).indexOf(b.metadata.tags?.[0] ?? '');
+
+    const _a = a.metadata.lcc !== '' ? a.metadata.lcc : atag >= 0 ? `${atag}` : `z${a.name}`;
+    const _b = b.metadata.lcc !== '' ? b.metadata.lcc : btag >= 0 ? `${btag}` : `z${b.name}`;
+    if (a.metadata?.tags?.length > 0 || b.metadata?.tags?.length > 0) console.log({
+        a,
+        b,
+        atag,
+        btag,
+        _a,
+        _b,
+        r: _a.localeCompare(_b),
+        settings,
+    });
 
     return (_a).localeCompare(_b);
 };
@@ -40,7 +53,7 @@ export const getFilesUnderPath = (path: string, plugin: FileTreeAlternativePlugi
     }
 
     //console.log(filesUnderPath.map(parseMetadata(plugin)).sort(sortByMetadata));
-    return filesUnderPath.map(parseMetadata(plugin)).sort(sortByMetadata);
+    return filesUnderPath.map(parseMetadata(plugin));
 };
 
 // Helper Function to Create Folder Tree

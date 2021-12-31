@@ -1,7 +1,8 @@
-import { Plugin, addIcon } from 'obsidian';
-import { VIEW_TYPE, FileTreeView, ICON } from './FileTreeView';
-import { ZoomInIcon, ZoomOutIcon, ZoomOutDoubleIcon, LocationIcon } from './utils/icons';
-import { FileTreeAlternativePluginSettings, FileTreeAlternativePluginSettingsTab, DEFAULT_SETTINGS } from './settings';
+import { addIcon, Plugin } from 'obsidian';
+import { FileTreeView, ICON, VIEW_TYPE } from './FileTreeView';
+import { LocationIcon, ZoomInIcon, ZoomOutDoubleIcon, ZoomOutIcon } from './utils/icons';
+import { DEFAULT_SETTINGS, FileTreeAlternativePluginSettings, FileTreeAlternativePluginSettingsTab } from './settings';
+import yaml from 'js-yaml';
 
 export const eventTypes = {
     activeFileChange: 'file-tree-alternative-active-file-change',
@@ -93,4 +94,23 @@ export default class FileTreeAlternativePlugin extends Plugin {
         this.detachFileTreeLeafs();
         this.openFileTreeLeaf(true);
     };
+
+    async evalFile(f: string): Promise<void> {
+        try {
+            const file = await this.app.vault.adapter.read(f);
+            const def = yaml.load(file);
+            return def;
+        } catch (e) {
+            console.error(`File Order couldn\'t import ${f}`);
+            console.error(e);
+        }
+    }
+
+    async loadTagOrder() {
+        // load all scripts
+        this.settings.tagOrder = await this.evalFile(this.settings.tagFile);
+
+        // @ts-ignore
+        window.tagOrder = tagOrder;
+    }
 }
