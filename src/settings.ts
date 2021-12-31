@@ -3,6 +3,7 @@ import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import { LocalStorageHandler } from '@ozntel/local-storage-handler';
 
 type FolderIcon = 'default' | 'box-folder' | 'icomoon' | 'typicon' | 'circle-gg';
+type OrderingOption = 'name' | 'last-update' | 'tags' | 'path' | string;
 
 export interface FileTreeAlternativePluginSettings {
     tagOrder: void;
@@ -19,7 +20,7 @@ export interface FileTreeAlternativePluginSettings {
     folderCountOption: string;
     evernoteView: boolean;
     filePreviewOnHover: boolean;
-    sortFilesBy: 'name' | 'last-update' | 'metadata';
+    sortFilesBy: OrderingOption[];
     fixedHeaderInFileList: boolean;
     tagFile: string;
 }
@@ -39,7 +40,7 @@ export const DEFAULT_SETTINGS: FileTreeAlternativePluginSettings = {
     folderCountOption: 'notes',
     evernoteView: true,
     filePreviewOnHover: false,
-    sortFilesBy: 'metadata',
+    sortFilesBy: ['path', 'tags', 'order'],
     fixedHeaderInFileList: false,
     tagFile: 'js/tag-order.yml',
 };
@@ -209,16 +210,20 @@ export class FileTreeAlternativePluginSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Sort Files By')
-            .setDesc('Select your preference how the files should be sorted in the file list')
-            .addDropdown((cb) => {
-                cb.addOption('name', 'Name');
-                cb.addOption('last-update', 'Last Update');
-                cb.addOption('metadata', 'Metadata');
-                cb.setValue(this.plugin.settings.sortFilesBy);
-                cb.onChange((option: 'name' | 'last-update' | 'metadata') => {
-                    this.plugin.settings.sortFilesBy = option;
-                    this.plugin.saveSettings();
-                    this.refreshView();
+            .setDesc('Order from high-to-low priority. Default options include `path`, `tags`, `name`, and `last-update`. You can include any other fields that show up in metadata')
+            .addText((cb) => {
+                cb.setValue(`[${this.plugin.settings.sortFilesBy.map(item => `"${item}"`)}]`);
+                cb.onChange((option: string) => {
+                    try {
+                        const order = eval(option);
+                        console.log({ order });
+                        this.plugin.settings.sortFilesBy = order;
+                        this.plugin.saveSettings();
+                        this.refreshView();
+                    } catch (e) {
+                        console.error(`File Order couldn\'t evaluate ${option}`);
+                        console.error(e);
+                    }
                 });
             });
 

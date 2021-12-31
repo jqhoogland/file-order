@@ -11,29 +11,36 @@ const _parseMetadata = (plugin) => (path) => {
     };
 };
 
-const parseMetadata = (plugin) => ({ path, ...file }) => ({
-    metadata: _parseMetadata(plugin)(path),
-    path, ...file,
-});
+export const getIndex = settings => (metadata, file) => {
+    const index = [];
 
-export const sortByMetadata = settings => (a, b) => {
-    const atag = (settings?.tagOrder ?? []).indexOf(a.metadata.tags?.[0] ?? '');
-    const btag = (settings?.tagOrder ?? []).indexOf(b.metadata.tags?.[0] ?? '');
-
-    const _a = a.metadata.lcc !== '' ? a.metadata.lcc : atag >= 0 ? `${atag}` : `z${a.name}`;
-    const _b = b.metadata.lcc !== '' ? b.metadata.lcc : btag >= 0 ? `${btag}` : `z${b.name}`;
-    if (a.metadata?.tags?.length > 0 || b.metadata?.tags?.length > 0) console.log({
-        a,
-        b,
-        atag,
-        btag,
-        _a,
-        _b,
-        r: _a.localeCompare(_b),
-        settings,
+    settings.sortFilesBy.forEach((key) => {
+        if (key === 'name') {
+            index.push(file.name);
+        } else if (key === 'last-update') {
+            index.push(file.stat.mtime);
+        } else if (key === 'path') {
+            index.push(file.path);
+        } else if (key === 'tags') {
+            const tagIndex = ((settings?.tagOrder ?? []).indexOf(metadata.tags?.[0] ?? ''));
+            index.push(tagIndex > -1 ? tagIndex : '');
+        } else {
+            index.push(metadata?.[key] ?? '');
+        }
     });
 
-    return (_a).localeCompare(_b);
+    return index.join('');
+};
+
+
+const parseMetadata = (plugin) => ({ path, ...file }) => {
+    const metadata = _parseMetadata(plugin)(path);
+
+    return ({
+        metadata,
+        index: getIndex(plugin.settings)(metadata, { path, ...file }),
+        path, ...file,
+    });
 };
 
 // Helper Function To Get List of Files
@@ -52,7 +59,7 @@ export const getFilesUnderPath = (path: string, plugin: FileTreeAlternativePlugi
         }
     }
 
-    //console.log(filesUnderPath.map(parseMetadata(plugin)).sort(sortByMetadata));
+    console.log(filesUnderPath.map(parseMetadata(plugin)));
     return filesUnderPath.map(parseMetadata(plugin));
 };
 

@@ -7,7 +7,7 @@ import FileTreeAlternativePlugin from 'main';
 import * as Util from 'utils/Utils';
 import * as recoilState from 'recoil/pluginState';
 import { useRecoilState } from 'recoil';
-import { sortByMetadata } from 'utils/Utils';
+import { fileSorter, sortByMetadata } from 'utils/Utils';
 
 interface FilesProps {
     plugin: FileTreeAlternativePlugin;
@@ -146,21 +146,15 @@ export function FileComponent(props: FilesProps) {
             });
         }
         // Sort File by Name or Last Content Update
-        sortedfileList = sortedfileList.sort((a, b) => {
-            if (plugin.settings.sortFilesBy === 'name') {
-                return a.name.localeCompare(b.name, 'en', { numeric: true });
-            } else if (plugin.settings.sortFilesBy === 'last-update') {
-                return b.stat.mtime - a.stat.mtime;
-            } else if (plugin.settings.sortFilesBy === 'metadata') {
-                return sortByMetadata(plugin.settings)(a, b);
-            }
-        });
+        sortedfileList = sortedfileList.sort((a, b) => (a?.index ?? a.name).localeCompare(b?.index ?? b.name));
+
         if (pinnedFiles.length > 0) {
             sortedfileList = sortedfileList.reduce((acc, element) => {
                 if (pinnedFiles.contains(element)) return [element, ...acc];
                 return [...acc, element];
             }, []);
         }
+
         return sortedfileList;
     };
 
